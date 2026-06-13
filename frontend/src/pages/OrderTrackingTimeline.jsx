@@ -184,35 +184,35 @@ function OtpCard({ otp }) {
   };
 
   return (
-    <div className="mt-2.5 rounded-xl bg-gray-50 border border-gray-100 p-3 sm:p-3.5">
-      <p className="text-xs text-gray-400 leading-relaxed mb-2">
+    <div className="mt-2.5 rounded-xl bg-gray-50 border border-gray-100 p-3">
+      <p className="text-xs text-gray-400 leading-relaxed mb-2.5">
         Share this OTP with the delivery partner to confirm delivery.
       </p>
-      <div className="flex items-center gap-2.5">
-        {/* Individual digit boxes */}
-        <div className="flex gap-1.5">
+      <div className="flex items-center justify-between gap-2">
+        {/* Individual digit boxes — grow to fill available width */}
+        <div className="flex gap-1 flex-1 min-w-0">
           {otp.split("").map((digit, i) => (
             <span
               key={i}
-              className="w-8 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-base font-semibold text-gray-900 select-none"
+              className="flex-1 min-w-0 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 select-none"
             >
               {digit}
             </span>
           ))}
         </div>
 
-        {/* Copy button */}
+        {/* Copy button — fixed width, never shrinks */}
         <button
           type="button"
           onClick={handleCopy}
-          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors duration-200 whitespace-nowrap focus:outline-none ${
+          className={`flex-shrink-0 flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors duration-200 whitespace-nowrap focus:outline-none ${
             copied
               ? "text-green-700 border-green-200 bg-green-50"
               : "text-gray-700 border-gray-200 bg-white hover:bg-gray-50 active:scale-95"
           }`}
           aria-label="Copy OTP"
         >
-          <Copy className="w-3 h-3" />
+          <Copy className="w-3 h-3 flex-shrink-0" />
           {copied ? "Copied!" : "Copy OTP"}
         </button>
       </div>
