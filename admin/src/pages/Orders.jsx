@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import axios from "axios";
 import { backendUrl, currency } from "../App";
 import { assets } from "../assets/assets";
@@ -158,6 +158,7 @@ const Orders = ({ token }) => {
   const [otpInput, setOtpInput] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpSubmitting, setOtpSubmitting] = useState(false);
+  const otpBoxRefs = useRef([]);
 
   const fetchAllOrders = async () => {
     if (!token) return null;
@@ -188,6 +189,7 @@ const Orders = ({ token }) => {
       );
       setOtpInput("");
       setOtpError("");
+      setTimeout(() => otpBoxRefs.current[0]?.focus(), 0);
       return;
     }
 
@@ -785,34 +787,58 @@ const Orders = ({ token }) => {
             </div>
 
             <p className="text-xs text-gray-500 mb-4">
-              Enter the 6-digit OTP shown on the customer's order tracking page
-              to mark this order as delivered.
+              Enter the 6-digit OTP shown on the customer's order tracking page.
             </p>
 
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              autoFocus
-              value={otpInput}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setOtpInput(digits);
-                if (otpError) setOtpError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") verifyDeliveryOtp();
-              }}
-              placeholder="Enter 6-digit OTP"
-              className={`w-full text-center tracking-[0.4em] text-lg font-semibold rounded-xl border px-3 py-2.5 outline-none transition focus:ring-2 ${
-                otpError
-                  ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                  : "border-gray-200 focus:border-slate-400 focus:ring-slate-100"
-              }`}
-            />
+            <div className="flex items-center justify-center gap-2 mb-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <input
+                  key={i}
+                  ref={(el) => (otpBoxRefs.current[i] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={otpInput[i] || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(-1);
+                    const chars = otpInput.split("");
+                    chars[i] = val;
+                    const next = chars.join("").slice(0, 6);
+                    setOtpInput(next);
+                    if (otpError) setOtpError("");
+                    if (val && i < 5) otpBoxRefs.current[i + 1]?.focus();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && !otpInput[i] && i > 0) {
+                      otpBoxRefs.current[i - 1]?.focus();
+                    }
+                    if (e.key === "Enter") verifyDeliveryOtp();
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const digits = e.clipboardData
+                      .getData("text")
+                      .replace(/\D/g, "")
+                      .slice(0, 6);
+                    if (!digits) return;
+                    setOtpInput(digits);
+                    if (otpError) setOtpError("");
+                    const focusIdx = Math.min(digits.length, 5);
+                    otpBoxRefs.current[focusIdx]?.focus();
+                  }}
+                  className={`w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none transition focus:ring-2 ${
+                    otpError
+                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                      : "border-gray-200 focus:border-slate-400 focus:ring-slate-100"
+                  }`}
+                />
+              ))}
+            </div>
 
             {otpError && (
-              <p className="text-xs text-red-500 mt-2">{otpError}</p>
+              <p className="text-xs text-red-500 mt-2 text-center">
+                {otpError}
+              </p>
             )}
 
             <div className="flex items-center gap-2 mt-4">
@@ -834,7 +860,7 @@ const Orders = ({ token }) => {
                     Verifying…
                   </>
                 ) : (
-                  "Verify & Mark Delivered"
+                  "Mark delivered"
                 )}
               </button>
             </div>
