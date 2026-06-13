@@ -50,7 +50,14 @@ const Orders = () => {
       );
 
       if (response.data.success) {
-        setOrders(response.data.orders.slice().reverse());
+        // Backend already returns orders sorted newest-first
+        // (orderModel.find({ userId }).sort({ date: -1 })).
+        // Sort again here defensively so the newest order is
+        // always shown at the top, regardless of backend order.
+        const sorted = response.data.orders
+          .slice()
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        setOrders(sorted);
       }
     } catch (error) {
       console.log(error);
