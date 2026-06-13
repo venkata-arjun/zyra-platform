@@ -10,6 +10,7 @@ import {
   verifyRazorpay,
   updateOrderStatus,
   verifyDeliveryOtp,
+  processRefund,
 } from "../controllers/orderController.js";
 
 import adminAuth from "../middleware/adminAuth.js";
@@ -29,14 +30,7 @@ orderRouter.patch("/:id/status", adminAuth, updateOrderStatus);
 orderRouter.post("/:id/verify-otp", adminAuth, verifyDeliveryOtp);
 
 // Process Refund (Admin)
-orderRouter.post("/refund", adminAuth, async (req, res) => {
-  // Keeping this route for now if you still need it
-  // You can remove it later if not used
-  return res.status(410).json({
-    success: false,
-    message: "This endpoint has been deprecated. Use status update instead.",
-  });
-});
+orderRouter.post("/refund", adminAuth, processRefund);
 
 // ====================== PAYMENT & USER ROUTES ======================
 

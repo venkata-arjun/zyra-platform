@@ -412,6 +412,54 @@ const verifyDeliveryOtp = async (req, res) => {
   }
 };
 
+// Process Refund (Admin)
+const processRefund = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID is required",
+      });
+    }
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.refundStatus === "Refunded") {
+      return res.status(400).json({
+        success: false,
+        message: "Refund already processed",
+      });
+    }
+
+    order.refundStatus = "Refunded";
+    order.refundDate = Date.now();
+
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Refund processed successfully",
+      order,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   placeOrder,
   placeOrderStripe,
@@ -423,4 +471,5 @@ export {
   verifyRazorpay,
   updateOrderStatus,
   verifyDeliveryOtp,
+  processRefund,
 };
