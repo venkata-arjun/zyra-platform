@@ -23,6 +23,14 @@ const orderSchema = new mongoose.Schema({
 
   status: {
     type: String,
+    enum: [
+      "Order Placed",
+      "Packing",
+      "Shipped",
+      "Out for delivery",
+      "Delivered",
+      "Cancelled",
+    ],
     default: "Order Placed",
   },
 
@@ -58,11 +66,29 @@ const orderSchema = new mongoose.Schema({
   statusHistory: {
     type: [
       {
-        status: { type: String, required: true },
-        date: { type: Number, required: true },
+        status: {
+          type: String,
+          required: true,
+        },
+        date: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     default: [],
+  },
+
+  // Delivery OTP (generated when order is Out for delivery)
+  deliveryOtp: {
+    type: String,
+    default: null,
+  },
+
+  // Tracks whether OTP has been successfully verified
+  otpVerified: {
+    type: Boolean,
+    default: false,
   },
 });
 

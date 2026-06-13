@@ -3,18 +3,21 @@
  *
  * Usage:
  *   <OrderTrackingTimeline order={order} currentIndex={currentIndex} />
+ *
+ * The `order` prop is expected to include `deliveryOtp` from the backend,
+ * populated when the order status moves to "Out for delivery".
  */
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   ClipboardCheck,
   Package,
   Truck,
   MapPinned,
   PackageCheck,
-  MapPin,
   Check,
   Copy,
+  ShieldCheck,
 } from "lucide-react";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -34,12 +37,7 @@ function addMinutes(date, mins) {
   return new Date(new Date(date).getTime() + mins * 60_000);
 }
 
-function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-// ─── description builder — returns segments, not a plain string ───────────────
-// Each segment: { text: string, dynamic: boolean }
+// ─── description builder ──────────────────────────────────────────────────────
 
 function getDescriptionSegments(key, time, order) {
   const a = order.address || {};
@@ -112,7 +110,6 @@ function buildSteps(order) {
       Icon: ClipboardCheck,
       label: "Order Placed",
       location: "ZYRA Store • Bhimavaram, Andhra Pradesh",
-      locationDynamic: [],
       _fallbackTime: createdAt,
     },
     {
@@ -120,7 +117,6 @@ function buildSteps(order) {
       Icon: Package,
       label: "Packing",
       location: "ZYRA Warehouse • Bhimavaram",
-      locationDynamic: [],
       _fallbackTime: addMinutes(createdAt, 20),
     },
     {
@@ -128,7 +124,6 @@ function buildSteps(order) {
       Icon: Truck,
       label: "Shipped",
       location: "ZYRA Dispatch Center • Bhimavaram",
-      locationDynamic: [],
       _fallbackTime: addMinutes(createdAt, 120),
     },
     {
@@ -156,16 +151,14 @@ function buildSteps(order) {
 
 function DescriptionSegments({ segments }) {
   return (
-    <p className="text-xs leading-relaxed">
+    <p className="text-sm sm:text-xs leading-relaxed text-gray-600">
       {segments.map((seg, i) =>
         seg.dynamic ? (
           <span key={i} className="text-gray-900 font-medium">
             {seg.text}
           </span>
         ) : (
-          <span key={i} className="text-gray-400">
-            {seg.text}
-          </span>
+          <span key={i}>{seg.text}</span>
         ),
       )}
     </p>
@@ -184,35 +177,41 @@ function OtpCard({ otp }) {
   };
 
   return (
-    <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5">
-      <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
-        Share this OTP with the delivery partner to confirm delivery.
-      </p>
-      <div className="flex items-center gap-2">
-        {/* Fixed-size digit boxes that never shrink or grow */}
-        <div className="flex gap-1 flex-shrink-0">
+    <div className="mt-3 rounded-2xl bg-gray-50 border border-gray-100 p-3 sm:p-3.5">
+      {/* Header */}
+      <div className="flex items-start gap-2 mb-2.5">
+        <ShieldCheck className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-gray-500 leading-snug">
+          Share this OTP with the delivery partner to confirm delivery.
+        </p>
+      </div>
+
+      {/* Digits + copy button */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Fixed-size digit boxes */}
+        <div className="flex gap-1.5 flex-shrink-0">
           {otp.split("").map((digit, i) => (
             <span
               key={i}
-              className="w-7 h-7 flex items-center justify-center bg-white border border-gray-200 rounded-md text-xs font-semibold text-gray-900 select-none"
+              className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-base font-semibold text-gray-900 select-none shadow-sm"
             >
               {digit}
             </span>
           ))}
         </div>
 
-        {/* Copy button — pushed to the right, never wraps */}
+        {/* Copy button */}
         <button
           type="button"
           onClick={handleCopy}
-          className={`ml-auto flex-shrink-0 flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md border transition-colors duration-200 whitespace-nowrap focus:outline-none ${
+          className={`flex-1 sm:flex-none sm:ml-auto flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border transition-all duration-200 active:scale-[0.97] focus:outline-none ${
             copied
               ? "text-green-700 border-green-200 bg-green-50"
-              : "text-gray-600 border-gray-200 bg-white hover:bg-gray-50 active:scale-95"
+              : "text-gray-700 border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100"
           }`}
           aria-label="Copy OTP"
         >
-          <Copy className="w-2.5 h-2.5 flex-shrink-0" />
+          <Copy className="w-4 h-4 flex-shrink-0" />
           {copied ? "Copied!" : "Copy OTP"}
         </button>
       </div>
@@ -222,7 +221,14 @@ function OtpCard({ otp }) {
 
 // ─── single step ──────────────────────────────────────────────────────────────
 
-function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
+function TrackingStep({
+  step,
+  state,
+  isLast,
+  expanded,
+  onToggle,
+  deliveryOtp,
+}) {
   const completed = state === "completed";
   const current = state === "current";
   const pending = state === "pending";
@@ -230,18 +236,12 @@ function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
   const timeStr = completed || current ? fmtDateTime(step.time) : null;
   const isClickable = completed || current;
 
-  const locationLines = step.locationLines
-    ? step.locationLines.filter((l) => l.text)
-    : (step.location || "")
-        .split("\n")
-        .map((t) => ({ text: t, dynamic: false }));
-
   return (
-    <div className="relative flex gap-3.5">
+    <div className="relative flex gap-4 sm:gap-5 group">
       {/* Connector line */}
       {!isLast && (
-        <span
-          className={`absolute left-[15px] top-9 w-px bottom-0 transition-colors duration-500 ${
+        <div
+          className={`absolute left-[15px] top-[42px] bottom-0 w-px transition-colors duration-500 ${
             completed ? "bg-gray-900" : "bg-gray-200"
           }`}
         />
@@ -252,12 +252,12 @@ function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
         type="button"
         onClick={isClickable ? onToggle : undefined}
         disabled={!isClickable}
-        className={`relative flex-shrink-0 z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 focus:outline-none ${
+        className={`relative z-10 flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border-2 transition-all duration-300 focus:outline-none active:scale-95 ${
           completed
-            ? "bg-gray-900 border-gray-900 text-white cursor-pointer hover:scale-110"
+            ? "bg-gray-900 border-gray-900 text-white hover:scale-105"
             : current
-              ? "bg-white border-gray-900 text-gray-900 scale-105 cursor-pointer hover:scale-110"
-              : "bg-gray-50 border-gray-200 text-gray-300 cursor-default"
+              ? "bg-white border-gray-900 text-gray-900 scale-105 shadow-md hover:scale-110"
+              : "bg-gray-50 border-gray-200 text-gray-300"
         }`}
         aria-label={
           isClickable
@@ -266,58 +266,65 @@ function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
         }
       >
         {completed ? (
-          <Check className="w-3.5 h-3.5" strokeWidth={3} />
+          <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={3.5} />
         ) : (
-          <step.Icon className="w-3.5 h-3.5" />
+          <step.Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
         )}
         {current && (
-          <span className="absolute inset-0 rounded-full border-2 border-gray-900 animate-ping opacity-25" />
+          <span className="absolute inset-0 rounded-2xl border-2 border-gray-900 animate-ping opacity-20" />
         )}
       </button>
 
-      {/* Right side */}
-      <div className={`flex-1 ${isLast ? "pb-1" : "pb-4"}`}>
-        {/* PENDING: label only */}
+      {/* Content */}
+      <div className="flex-1 min-w-0 pt-1 pb-6 sm:pb-7 last:pb-1">
         {pending ? (
-          <div className="flex items-center h-8">
-            <p className="text-sm text-gray-300 font-medium">{step.label}</p>
+          <div className="flex items-center h-9">
+            <p className="text-sm sm:text-base text-gray-400 font-medium">
+              {step.label}
+            </p>
           </div>
         ) : (
           <>
-            {/* Always visible: label + time */}
+            {/* Always visible header */}
             <div
-              className="flex flex-col justify-center h-8 cursor-pointer select-none"
+              className="flex justify-between items-start cursor-pointer select-none pr-1"
               onClick={onToggle}
             >
-              <p className="text-sm font-semibold text-gray-900 leading-tight">
-                {step.label}
-              </p>
-              {timeStr && (
-                <span className="text-xs text-gray-400 leading-tight">
-                  {timeStr}
-                </span>
-              )}
+              <div>
+                <p className="text-base sm:text-lg font-semibold text-gray-900 tracking-tight">
+                  {step.label}
+                </p>
+                {timeStr && (
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    {timeStr}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Expanded detail */}
+            {/* Expanded content */}
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                expanded ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
+              className={`overflow-hidden transition-all duration-300 ease-out ${
+                expanded
+                  ? "max-h-[500px] opacity-100 mt-4"
+                  : "max-h-0 opacity-0"
               }`}
             >
+              {/* Description */}
               <div
-                className={`rounded-xl p-3 sm:p-3.5 ${
+                className={`rounded-2xl p-4 sm:p-5 border transition-colors ${
                   current
-                    ? "border-2 border-gray-900 bg-white shadow-sm"
-                    : "border border-gray-100 bg-white"
+                    ? "border-gray-900 bg-white shadow"
+                    : "border-gray-100 bg-white"
                 }`}
               >
-                {/* Description */}
                 <DescriptionSegments segments={step.descriptionSegments} />
               </div>
 
-              {/* OTP card — only for "Out for delivery" */}
-              {step.key === "Out for delivery" && otp && <OtpCard otp={otp} />}
+              {/* OTP Card */}
+              {step.key === "Out for delivery" && deliveryOtp && (
+                <OtpCard otp={deliveryOtp} />
+              )}
             </div>
           </>
         )}
@@ -330,9 +337,6 @@ function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
 
 export function OrderTrackingTimeline({ order, currentIndex }) {
   const steps = buildSteps(order);
-
-  // Generate OTP once per order; stable across re-renders
-  const otp = useMemo(() => generateOtp(), []);
 
   const stepsResolved = steps.map((step, i) => {
     const historyEntry = order.statusHistory?.find(
@@ -357,26 +361,24 @@ export function OrderTrackingTimeline({ order, currentIndex }) {
   };
 
   return (
-    <div className="relative">
-      {stepsResolved.map((step, i) => {
-        const state =
-          i < currentIndex
-            ? "completed"
-            : i === currentIndex
-              ? "current"
-              : "pending";
-        return (
-          <TrackingStep
-            key={step.key}
-            step={step}
-            state={state}
-            isLast={i === stepsResolved.length - 1}
-            expanded={expandedIndex === i}
-            onToggle={() => handleToggle(i)}
-            otp={otp}
-          />
-        );
-      })}
+    <div className="w-full max-w-2xl mx-auto px-1">
+      {stepsResolved.map((step, i) => (
+        <TrackingStep
+          key={step.key}
+          step={step}
+          state={
+            i < currentIndex
+              ? "completed"
+              : i === currentIndex
+                ? "current"
+                : "pending"
+          }
+          isLast={i === stepsResolved.length - 1}
+          expanded={expandedIndex === i}
+          onToggle={() => handleToggle(i)}
+          deliveryOtp={order.deliveryOtp ?? null}
+        />
+      ))}
     </div>
   );
 }

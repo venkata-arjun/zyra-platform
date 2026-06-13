@@ -153,6 +153,12 @@ const Orders = ({ token }) => {
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // OTP verification modal state (for marking order as Delivered)
+  const [otpModalOrder, setOtpModalOrder] = useState(null);
+  const [otpInput, setOtpInput] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpSubmitting, setOtpSubmitting] = useState(false);
+
   const fetchAllOrders = async () => {
     if (!token) return null;
     try {
@@ -172,12 +178,30 @@ const Orders = ({ token }) => {
   };
 
   const statusHandler = async (event, orderId) => {
-    try {
-      const response = await axios.post(
-        backendUrl + "/api/order/status",
-        { orderId, status: event.target.value },
-        { headers: { token } },
+    const newStatus = event.target.value;
+
+    // "Delivered" requires OTP verification — open modal instead of
+    // calling the status endpoint directly.
+    if (newStatus === "Delivered") {
+      setOtpModalOrder(
+        orders.find((o) => o._id === orderId) || { _id: orderId },
       );
+      setOtpInput("");
+      setOtpError("");
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${backendUrl}/api/order/${orderId}/status`,
+        {
+          status: newStatus,
+        },
+        {
+          headers: { token },
+        },
+      );
+
       if (response.data.success) {
         toast.success(response.data.message);
         await fetchAllOrders();
@@ -185,7 +209,47 @@ const Orders = ({ token }) => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  const closeOtpModal = () => {
+    setOtpModalOrder(null);
+    setOtpInput("");
+    setOtpError("");
+    setOtpSubmitting(false);
+  };
+
+  const verifyDeliveryOtp = async () => {
+    if (!otpModalOrder) return;
+
+    const otp = otpInput.trim();
+    if (!/^\d{6}$/.test(otp)) {
+      setOtpError("Enter the 6-digit OTP");
+      return;
+    }
+
+    setOtpSubmitting(true);
+    setOtpError("");
+
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/order/${otpModalOrder._id}/verify-otp`,
+        { otp },
+        { headers: { token } },
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message || "Order marked as Delivered");
+        closeOtpModal();
+        await fetchAllOrders();
+      } else {
+        setOtpError(response.data.message || "Invalid OTP");
+      }
+    } catch (error) {
+      setOtpError(error.response?.data?.message || error.message);
+    } finally {
+      setOtpSubmitting(false);
     }
   };
 
@@ -696,6 +760,87 @@ const Orders = ({ token }) => {
           </div>
         )}
       </div>
+
+      {/* ── Delivery OTP Verification Modal ── */}
+      {otpModalOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !otpSubmitting) closeOtpModal();
+          }}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl border border-gray-100 p-5 sm:p-6">
+            <div className="flex items-start justify-between mb-1">
+              <h2 className="text-base font-semibold text-slate-900">
+                Confirm Delivery
+              </h2>
+              <button
+                onClick={closeOtpModal}
+                disabled={otpSubmitting}
+                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-4">
+              Enter the 6-digit OTP shown on the customer's order tracking page
+              to mark this order as delivered.
+            </p>
+
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              value={otpInput}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setOtpInput(digits);
+                if (otpError) setOtpError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") verifyDeliveryOtp();
+              }}
+              placeholder="Enter 6-digit OTP"
+              className={`w-full text-center tracking-[0.4em] text-lg font-semibold rounded-xl border px-3 py-2.5 outline-none transition focus:ring-2 ${
+                otpError
+                  ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                  : "border-gray-200 focus:border-slate-400 focus:ring-slate-100"
+              }`}
+            />
+
+            {otpError && (
+              <p className="text-xs text-red-500 mt-2">{otpError}</p>
+            )}
+
+            <div className="flex items-center gap-2 mt-4">
+              <button
+                onClick={closeOtpModal}
+                disabled={otpSubmitting}
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={verifyDeliveryOtp}
+                disabled={otpSubmitting || otpInput.length !== 6}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-800 px-3 py-2.5 text-sm font-medium text-white hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {otpSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Verifying…
+                  </>
+                ) : (
+                  "Verify & Mark Delivered"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
