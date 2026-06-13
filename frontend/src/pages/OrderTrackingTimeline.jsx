@@ -5,7 +5,7 @@
  *   <OrderTrackingTimeline order={order} currentIndex={currentIndex} />
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ClipboardCheck,
   Package,
@@ -14,6 +14,7 @@ import {
   PackageCheck,
   MapPin,
   Check,
+  Copy,
 } from "lucide-react";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -31,6 +32,10 @@ function fmtDateTime(date) {
 
 function addMinutes(date, mins) {
   return new Date(new Date(date).getTime() + mins * 60_000);
+}
+
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 // ─── description builder — returns segments, not a plain string ───────────────
@@ -130,7 +135,6 @@ function buildSteps(order) {
       key: "Out for delivery",
       Icon: MapPinned,
       label: "Out for Delivery",
-      // city + state are dynamic
       locationLines: [{ text: `${a.city}, ${a.state}`, dynamic: true }],
       _fallbackTime: addMinutes(createdAt, 420),
     },
@@ -138,7 +142,6 @@ function buildSteps(order) {
       key: "Delivered",
       Icon: PackageCheck,
       label: "Delivered",
-      // every line is dynamic
       locationLines: [
         { text: fullName, dynamic: true },
         { text: a.street, dynamic: true },
@@ -169,9 +172,57 @@ function DescriptionSegments({ segments }) {
   );
 }
 
+// ─── OTP card ─────────────────────────────────────────────────────────────────
+
+function OtpCard({ otp }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(otp).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="mt-2.5 rounded-xl bg-gray-50 border border-gray-100 p-3 sm:p-3.5">
+      <p className="text-xs text-gray-400 leading-relaxed mb-2">
+        Share this OTP with the delivery partner to confirm delivery.
+      </p>
+      <div className="flex items-center gap-2.5">
+        {/* Individual digit boxes */}
+        <div className="flex gap-1.5">
+          {otp.split("").map((digit, i) => (
+            <span
+              key={i}
+              className="w-8 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-base font-semibold text-gray-900 select-none"
+            >
+              {digit}
+            </span>
+          ))}
+        </div>
+
+        {/* Copy button */}
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors duration-200 whitespace-nowrap focus:outline-none ${
+            copied
+              ? "text-green-700 border-green-200 bg-green-50"
+              : "text-gray-700 border-gray-200 bg-white hover:bg-gray-50 active:scale-95"
+          }`}
+          aria-label="Copy OTP"
+        >
+          <Copy className="w-3 h-3" />
+          {copied ? "Copied!" : "Copy OTP"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── single step ──────────────────────────────────────────────────────────────
 
-function TrackingStep({ step, state, isLast, expanded, onToggle }) {
+function TrackingStep({ step, state, isLast, expanded, onToggle, otp }) {
   const completed = state === "completed";
   const current = state === "current";
   const pending = state === "pending";
@@ -179,7 +230,6 @@ function TrackingStep({ step, state, isLast, expanded, onToggle }) {
   const timeStr = completed || current ? fmtDateTime(step.time) : null;
   const isClickable = completed || current;
 
-  // Normalize locationLines — static steps use plain string, dynamic steps use segments
   const locationLines = step.locationLines
     ? step.locationLines.filter((l) => l.text)
     : (step.location || "")
@@ -252,7 +302,7 @@ function TrackingStep({ step, state, isLast, expanded, onToggle }) {
             {/* Expanded detail */}
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                expanded ? "max-h-72 opacity-100 mt-2" : "max-h-0 opacity-0"
+                expanded ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
               }`}
             >
               <div
@@ -262,30 +312,12 @@ function TrackingStep({ step, state, isLast, expanded, onToggle }) {
                     : "border border-gray-100 bg-white"
                 }`}
               >
-                {/* Location lines — dynamic values in gray-900, static in gray-400 */}
-                {/* <div className="flex flex-col gap-0.5 mb-2">
-                  {locationLines.map((line, idx) => (
-                    <span
-                      key={idx}
-                      className="flex items-start gap-1 leading-snug"
-                    >
-                      <MapPin className="w-2.5 h-2.5 flex-shrink-0 mt-0.5 text-gray-400" />
-                      <span
-                        className={`text-xs ${
-                          line.dynamic
-                            ? "text-gray-900 font-medium"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {line.text}
-                      </span>
-                    </span>
-                  ))}
-                </div> */}
-
-                {/* Description — dynamic values darker, static text muted */}
+                {/* Description */}
                 <DescriptionSegments segments={step.descriptionSegments} />
               </div>
+
+              {/* OTP card — only for "Out for delivery" */}
+              {step.key === "Out for delivery" && otp && <OtpCard otp={otp} />}
             </div>
           </>
         )}
@@ -298,6 +330,9 @@ function TrackingStep({ step, state, isLast, expanded, onToggle }) {
 
 export function OrderTrackingTimeline({ order, currentIndex }) {
   const steps = buildSteps(order);
+
+  // Generate OTP once per order; stable across re-renders
+  const otp = useMemo(() => generateOtp(), []);
 
   const stepsResolved = steps.map((step, i) => {
     const historyEntry = order.statusHistory?.find(
@@ -338,6 +373,7 @@ export function OrderTrackingTimeline({ order, currentIndex }) {
             isLast={i === stepsResolved.length - 1}
             expanded={expandedIndex === i}
             onToggle={() => handleToggle(i)}
+            otp={otp}
           />
         );
       })}
