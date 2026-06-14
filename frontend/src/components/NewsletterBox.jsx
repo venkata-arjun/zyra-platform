@@ -12,7 +12,7 @@ const NewsletterBox = () => {
       origin: { y: 0.7 },
     });
 
-    toast.success("✨ You're all set! Welcome to the ZYRA community.", {
+    toast.success("You're all set! Welcome to the ZYRA community.", {
       duration: 4500,
     });
 
