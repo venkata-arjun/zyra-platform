@@ -102,7 +102,6 @@ function getDescriptionSegments(key, time, order) {
 
 function buildSteps(order) {
   const a = order.address || {};
-  const fullName = [a.firstName, a.lastName].filter(Boolean).join(" ");
   const createdAt = order.createdAt || order.date;
 
   return [
@@ -175,7 +174,6 @@ function OtpCard({ otp }) {
 
   return (
     <div className="mt-4 rounded-lg border border-slate-200 bg-gray-50 shadow-sm p-2.5 w-full">
-      {/* Header */}
       <div className="flex items-start gap-2 mb-2">
         <ShieldCheck className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
         <p className="text-[11px] sm:text-xs text-slate-600 leading-snug">
@@ -183,7 +181,6 @@ function OtpCard({ otp }) {
         </p>
       </div>
 
-      {/* Digits */}
       <div className="flex items-center justify-center gap-1.5 mb-2">
         {otp.split("").map((digit, i) => (
           <span
@@ -195,7 +192,6 @@ function OtpCard({ otp }) {
         ))}
       </div>
 
-      {/* Copy button */}
       <div className="flex justify-center">
         <button
           type="button"
@@ -203,7 +199,7 @@ function OtpCard({ otp }) {
           className={`flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-all duration-150 active:scale-[0.97] focus:outline-none ${
             copied
               ? "text-green-700 border-green-200 bg-green-50"
-              : "text-slate-700 border-slate-200 bg-white hover:bg-slate-100 active:bg-slate-100"
+              : "text-slate-700 border-slate-200 bg-white hover:bg-slate-100"
           }`}
           aria-label="Copy OTP"
         >
@@ -237,7 +233,7 @@ function TrackingStep({
     <div
       className={`relative flex gap-3 sm:gap-4 ${isLast ? "" : "mb-4 sm:mb-5"}`}
     >
-      {/* Connector line (segment above the node) */}
+      {/* Connector above */}
       {!isFirst && (
         <div
           className={`absolute left-[13px] sm:left-[15px] -top-px h-3 sm:h-4 w-px ${
@@ -245,8 +241,7 @@ function TrackingStep({
           }`}
         />
       )}
-      {/* Connector line (segment below the node) — spans through the
-          margin gap into the next item so the line stays continuous */}
+      {/* Connector below — extends through the margin gap */}
       {!isLast && (
         <div
           className={`absolute left-[13px] sm:left-[15px] top-[28px] sm:top-[32px] w-px ${
@@ -256,17 +251,15 @@ function TrackingStep({
         />
       )}
 
-      {/* Icon bubble */}
+      {/* Icon bubble — completed AND current both fill solid black */}
       <button
         type="button"
         onClick={isClickable ? onToggle : undefined}
         disabled={!isClickable}
         className={`relative z-10 flex-shrink-0 flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 ${
-          completed
+          completed || current
             ? "bg-slate-900 border-slate-900 text-white"
-            : current
-              ? "bg-white border-slate-900 text-slate-900 ring-4 ring-slate-100"
-              : "bg-white border-slate-200 text-slate-300"
+            : "bg-white border-slate-200 text-slate-300"
         }`}
         aria-label={
           isClickable
@@ -274,7 +267,8 @@ function TrackingStep({
             : undefined
         }
       >
-        {completed ? (
+        {/* Always show checkmark for completed or current; icon for pending */}
+        {completed || current ? (
           <Check className="w-3.5 h-3.5" strokeWidth={3} />
         ) : (
           <step.Icon className="w-3.5 h-3.5" />
@@ -289,11 +283,10 @@ function TrackingStep({
           </div>
         ) : (
           <>
-            {/* Always visible header */}
             <button
               type="button"
               onClick={onToggle}
-              className="w-full flex items-center justify-between gap-2 text-left group"
+              className="w-full flex items-center justify-between gap-2 text-left"
             >
               <div className="min-w-0">
                 <p className="text-sm sm:text-[15px] font-semibold tracking-tight text-slate-900">
@@ -313,7 +306,6 @@ function TrackingStep({
               />
             </button>
 
-            {/* Expanded content */}
             <div
               className={`overflow-hidden transition-all duration-300 ease-out ${
                 expanded
@@ -321,12 +313,9 @@ function TrackingStep({
                   : "max-h-0 opacity-0"
               }`}
             >
-              {/* Description */}
               <div className="rounded-lg p-3 border border-slate-100 bg-slate-50/60">
                 <DescriptionSegments segments={step.descriptionSegments} />
               </div>
-
-              {/* OTP Card */}
               {step.key === "Out for delivery" && deliveryOtp && (
                 <OtpCard otp={deliveryOtp} />
               )}
@@ -368,30 +357,35 @@ export function OrderTrackingTimeline({ order, currentIndex }) {
   const currentStep = stepsResolved[currentIndex];
   const isDelivered = currentStep?.key === "Delivered";
 
+  // When delivered every step is "completed" — no "current" state needed
+  const getState = (i) => {
+    if (isDelivered) {
+      // All steps completed — the timeline is fully done
+      return i <= currentIndex ? "completed" : "pending";
+    }
+    if (i < currentIndex) return "completed";
+    if (i === currentIndex) return "current";
+    return "pending";
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Status summary header */}
-      <div className="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-0.5">
-            {isDelivered ? "Delivered" : "Current status"}
-          </p>
-          <p className="text-base sm:text-lg font-semibold text-slate-900 truncate">
-            {currentStep?.label}
-          </p>
+      {/* Status summary header — hidden when delivered to avoid duplicate label */}
+      {!isDelivered && (
+        <div className="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium mb-0.5">
+              Current status
+            </p>
+            <p className="text-base sm:text-lg font-semibold text-slate-900 truncate">
+              {currentStep?.label}
+            </p>
+          </div>
+          <span className="inline-flex items-center flex-shrink-0 rounded-full font-medium whitespace-nowrap px-2.5 py-1 text-[11px] sm:text-xs bg-slate-100 text-slate-900 border border-slate-200">
+            Step {currentIndex + 1} of {stepsResolved.length}
+          </span>
         </div>
-        <span
-          className={`inline-flex items-center flex-shrink-0 rounded-full font-medium whitespace-nowrap ${
-            isDelivered
-              ? "px-2 py-0.5 text-[10px] bg-green-50 text-green-700 border border-green-100"
-              : "px-2.5 py-1 text-[11px] sm:text-xs bg-slate-100 text-slate-900 border border-slate-200"
-          }`}
-        >
-          {isDelivered
-            ? "Completed"
-            : `Step ${currentIndex + 1} of ${stepsResolved.length}`}
-        </span>
-      </div>
+      )}
 
       {/* Timeline */}
       <div className="px-1">
@@ -399,13 +393,7 @@ export function OrderTrackingTimeline({ order, currentIndex }) {
           <TrackingStep
             key={step.key}
             step={step}
-            state={
-              i < currentIndex
-                ? "completed"
-                : i === currentIndex
-                  ? "current"
-                  : "pending"
-            }
+            state={getState(i)}
             isFirst={i === 0}
             isLast={i === stepsResolved.length - 1}
             expanded={expandedIndex === i}

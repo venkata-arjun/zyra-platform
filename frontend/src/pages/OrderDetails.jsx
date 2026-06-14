@@ -79,116 +79,116 @@ const CANCEL_STEPS = [
 ];
 
 function CancelledTimeline({ order, isRefunded }) {
-  // Figure out how far the order got before cancellation
   const lastActiveIndex = (() => {
     for (let i = CANCEL_STEPS.length - 1; i >= 0; i--) {
       if (order.statusHistory?.find((h) => h.status === CANCEL_STEPS[i].key)) {
         return i;
       }
     }
-    return -1; // cancelled before any step recorded (edge case)
+    return -1;
   })();
 
   const showRefund = order.payment && order.paymentMethod !== "COD";
 
-  // All timeline rows: completed stages + Cancelled + optional Refund
   const rows = [
     ...CANCEL_STEPS.slice(0, lastActiveIndex + 1).map((s) => {
       const entry = order.statusHistory?.find((h) => h.status === s.key);
       return { type: "done", label: s.label, date: entry?.date };
     }),
-    {
-      type: "cancelled",
-      label: "Cancelled",
-      date: order.cancelledAt,
-    },
+    { type: "cancelled", label: "Order cancelled", date: order.cancelledAt },
     ...(showRefund
       ? [
           {
             type: isRefunded ? "refunded" : "pending-refund",
-            label: isRefunded ? "Refund processed" : "Refund processing",
-            date: isRefunded ? order.refundDate : null,
+            label: isRefunded ? "Refund processed" : "Refund initiated",
+            date: isRefunded ? order.refundDate : order.cancelledAt,
+            sub: isRefunded
+              ? null
+              : "Amount will be credited within 5–7 business days",
           },
         ]
       : []),
   ];
 
   return (
-    <div className="pl-1">
+    <div className="space-y-0">
       {rows.map((row, i) => {
         const isLast = i === rows.length - 1;
         const isCancelledRow = row.type === "cancelled";
         const isRefundedRow = row.type === "refunded";
         const isPendingRefund = row.type === "pending-refund";
-
-        // Dot colour
-        const dotClass = isCancelledRow
-          ? "bg-red-500 border-red-500 text-white"
-          : isRefundedRow
-            ? "bg-green-600 border-green-600 text-white"
-            : isPendingRefund
-              ? "bg-white border-slate-300 text-slate-400"
-              : "bg-slate-900 border-slate-900 text-white"; // done
-
-        // Line colour below this row
-        const lineClass = isCancelledRow
-          ? "bg-slate-200"
-          : isRefundedRow || isPendingRefund
-            ? "bg-slate-200"
-            : "bg-slate-300";
+        const isDone = row.type === "done";
 
         return (
-          <div
-            key={i}
-            className={`relative flex gap-3 sm:gap-4 ${isLast ? "" : "pb-6"}`}
-          >
-            {/* Connector line */}
-            {!isLast && (
+          <div key={i} className="relative flex gap-4">
+            {/* ── Spine ── */}
+            <div className="flex flex-col items-center">
+              {/* Node */}
               <div
-                className={`absolute left-[13px] sm:left-[15px] top-7 bottom-0 w-px ${lineClass}`}
-              />
-            )}
-
-            {/* Dot */}
-            <div
-              className={`relative z-10 flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center ${dotClass}`}
-            >
-              {isRefundedRow ? (
-                <Check className="w-3.5 h-3.5" strokeWidth={3} />
-              ) : isCancelledRow ? (
-                <span className="w-2 h-2 rounded-full bg-white opacity-80" />
-              ) : isPendingRefund ? (
-                <span className="w-2 h-2 rounded-full bg-slate-300" />
-              ) : (
-                <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                className={`relative z-10 flex-shrink-0 flex items-center justify-center rounded-full transition-all ${
+                  isCancelledRow
+                    ? "w-7 h-7 bg-red-50 border-2 border-red-400"
+                    : isRefundedRow
+                      ? "w-7 h-7 bg-green-600 border-2 border-green-600"
+                      : isPendingRefund
+                        ? "w-7 h-7 bg-white border-2 border-slate-300"
+                        : "w-7 h-7 bg-slate-900 border-2 border-slate-900"
+                }`}
+              >
+                {isDone && (
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                )}
+                {isCancelledRow && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                )}
+                {isRefundedRow && (
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                )}
+                {isPendingRefund && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                )}
+              </div>
+              {/* Connector */}
+              {!isLast && (
+                <div
+                  className={`w-px flex-1 mt-1 mb-1 min-h-[28px] ${
+                    isDone && !isCancelledRow ? "bg-slate-300" : "bg-slate-200"
+                  }`}
+                />
               )}
             </div>
 
-            {/* Text */}
-            <div className="flex-1 min-w-0 pt-0.5">
-              <p
-                className={`text-sm font-semibold leading-tight ${
-                  isCancelledRow
-                    ? "text-red-600"
-                    : isRefundedRow
-                      ? "text-green-700"
-                      : isPendingRefund
-                        ? "text-slate-500"
-                        : "text-slate-900"
-                }`}
-              >
-                {row.label}
-              </p>
-              {row.date && (
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {fmtDate(row.date)}
-                </p>
-              )}
-              {isPendingRefund && (
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Pending review by admin
-                </p>
-              )}
+            {/* ── Content ── */}
+            <div
+              className={`flex-1 min-w-0 ${isLast ? "pb-0" : "pb-5"} pt-0.5`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p
+                    className={`text-[13px] sm:text-sm font-semibold leading-snug ${
+                      isCancelledRow
+                        ? "text-red-600"
+                        : isRefundedRow
+                          ? "text-green-700"
+                          : isPendingRefund
+                            ? "text-slate-600"
+                            : "text-slate-900"
+                    }`}
+                  >
+                    {row.label}
+                  </p>
+                  {row.sub && (
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                      {row.sub}
+                    </p>
+                  )}
+                </div>
+                {row.date && (
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 whitespace-nowrap flex-shrink-0 mt-0.5">
+                    {fmtDate(row.date)}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -392,7 +392,8 @@ const OrderDetails = () => {
               {order.items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
+                  onClick={() => navigate(`/product/${item._id}`)}
+                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded-xl transition-colors"
                 >
                   <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
                     <img
@@ -401,9 +402,9 @@ const OrderDetails = () => {
                       alt={item.name}
                     />
                   </div>
-                  {/* min-w-0 ensures long names truncate instead of overflowing */}
+                  {/* min-w-0 ensures long names wrap instead of overflowing */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 leading-snug">
                       {item.name}
                     </p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
