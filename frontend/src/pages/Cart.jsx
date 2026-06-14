@@ -76,9 +76,12 @@ const Cart = () => {
               key={index}
               className="py-5 sm:py-6 flex items-center gap-4 sm:gap-6 group transition-colors duration-200 hover:bg-gray-50/60 -mx-3 px-3 rounded-lg"
             >
-              {/* Product Image */}
+              {/* Product Image — clickable */}
               <div className="flex-shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-lg bg-gray-50 border border-gray-100">
+                <div
+                  onClick={() => navigate(`/product/${item._id}`)}
+                  className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-lg bg-gray-50 border border-gray-100 cursor-pointer"
+                >
                   <img
                     className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                     src={productData.image[0]}
@@ -89,7 +92,11 @@ const Cart = () => {
 
               {/* Product Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-semibold text-gray-900 truncate leading-snug">
+                {/* Product name — clickable, full text shown (no truncate) */}
+                <p
+                  onClick={() => navigate(`/product/${item._id}`)}
+                  className="text-sm sm:text-base font-semibold text-gray-900 leading-snug cursor-pointer hover:text-gray-600 transition-colors duration-150"
+                >
                   {productData.name}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1.5">
