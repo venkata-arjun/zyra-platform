@@ -293,7 +293,7 @@ function TrackingStep({
                   {step.label}
                 </p>
                 {timeStr && (
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 break-words">
                     {timeStr}
                     {step.location ? ` · ${step.location}` : ""}
                   </p>
