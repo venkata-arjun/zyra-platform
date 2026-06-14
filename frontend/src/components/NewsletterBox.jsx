@@ -1,8 +1,22 @@
 import React from "react";
+import toast from "react-hot-toast";
+import confetti from "canvas-confetti";
 
 const NewsletterBox = () => {
   const onSubmitHandler = (event) => {
     event.preventDefault();
+
+    confetti({
+      particleCount: 120,
+      spread: 90,
+      origin: { y: 0.7 },
+    });
+
+    toast.success("✨ You're all set! Welcome to the ZYRA community.", {
+      duration: 4500,
+    });
+
+    event.target.reset();
   };
 
   return (
@@ -18,8 +32,7 @@ const NewsletterBox = () => {
 
       {/* Headline */}
       <p className="text-2xl sm:text-3xl font-medium text-gray-800 leading-snug">
-        Subscribe & get{" "}
-        <span className="text-black font-semibold">20% off</span>
+        Join the ZYRA Community
       </p>
 
       {/* Subtext */}
@@ -39,7 +52,6 @@ const NewsletterBox = () => {
           placeholder="Enter your email address"
           required
         />
-
         <button
           type="submit"
           className="bg-black text-white text-xs tracking-widest px-7 py-3.5 flex-shrink-0 hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
@@ -47,11 +59,6 @@ const NewsletterBox = () => {
           SUBSCRIBE
         </button>
       </form>
-
-      {/* Privacy note */}
-      <p className="mt-4 text-[11px] text-gray-300">
-        No spam. Unsubscribe anytime.
-      </p>
     </div>
   );
 };
