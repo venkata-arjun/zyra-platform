@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Headset,
   Clock3,
+  ShieldCheck,
 } from "lucide-react";
 
 const Contact = () => {
@@ -24,8 +25,8 @@ const Contact = () => {
       text: "Fast delivery across India",
     },
     {
-      icon: <RefreshCw className="w-4 h-4" />,
-      text: "Easy returns & exchanges",
+      icon: <ShieldCheck className="w-4 h-4" />,
+      text: "Secure payments & checkout",
     },
     {
       icon: <Headset className="w-4 h-4" />,
@@ -149,7 +150,7 @@ const Contact = () => {
             </div>
 
             <p className="text-sm text-gray-500 leading-7">
-              Need help with an order, return, exchange, or sizing? Our support
+              Need help with an order, product details, or sizing? Our support
               team is ready to assist you with a quick response.
             </p>
           </div>
