@@ -89,7 +89,6 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    // ── Single consolidated empty-fields check ──
     const requiredFields = [
       "firstName",
       "lastName",
@@ -103,26 +102,22 @@ const PlaceOrder = () => {
     ];
 
     const hasEmptyField = requiredFields.some((key) => !formData[key].trim());
-
     if (hasEmptyField) {
       toast.error("Please fill in all required details");
       return;
     }
 
-    // ── Email validation ──
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-    // ── Phone validation ──
     if (!/^\d{10}$/.test(formData.phone)) {
       toast.error("Please enter a valid 10-digit phone number");
       return;
     }
 
-    // ── Cart validation ──
     if (getCartAmount() === 0) {
       toast.error("Your cart is empty");
       return;
@@ -210,7 +205,7 @@ const PlaceOrder = () => {
   return (
     <form
       onSubmit={onSubmitHandler}
-      className="flex flex-col sm:flex-row justify-between gap-8 sm:gap-12 pt-8 sm:pt-14 min-h-[80vh] border-t px-4 sm:px-0"
+      className="flex flex-col sm:flex-row justify-between gap-8 sm:gap-12 pt-8 sm:pt-14 border-t border-gray-200 px-4 sm:px-0 pb-20 sm:pb-24"
     >
       {/* ── Left: Delivery Information ── */}
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
@@ -369,7 +364,7 @@ const PlaceOrder = () => {
           </div>
 
           {/* Place Order Button */}
-          <div className="mt-7">
+          <div className="mt-7 mb-2">
             <button
               type="submit"
               className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs tracking-[0.15em] uppercase font-semibold px-10 py-4 rounded-lg hover:bg-black active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md"

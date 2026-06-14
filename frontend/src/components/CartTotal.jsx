@@ -53,12 +53,7 @@ const CartTotal = () => {
         </div>
       </div>
 
-      {/* Free shipping nudge */}
-      {subtotal > 0 && (
-        <p className="text-[11px] text-gray-400 text-right mt-2 tracking-wide">
-          Taxes included · Free returns
-        </p>
-      )}
+      
     </div>
   );
 };

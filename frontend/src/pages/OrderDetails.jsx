@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Check,
   CheckCircle2,
-  X,
   ClipboardList,
   Package,
   Truck,
@@ -55,6 +54,148 @@ const STEPS = [
 ];
 
 const DELIVERY_CHARGE = 10;
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function fmtDate(date) {
+  if (!date) return null;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(date));
+}
+
+// ─── Cancelled Timeline ───────────────────────────────────────────────────────
+
+const CANCEL_STEPS = [
+  { key: "Order Placed", label: "Order placed" },
+  { key: "Packing", label: "Packing" },
+  { key: "Shipped", label: "Shipped" },
+  { key: "Out for delivery", label: "Out for delivery" },
+];
+
+function CancelledTimeline({ order, isRefunded }) {
+  // Figure out how far the order got before cancellation
+  const lastActiveIndex = (() => {
+    for (let i = CANCEL_STEPS.length - 1; i >= 0; i--) {
+      if (order.statusHistory?.find((h) => h.status === CANCEL_STEPS[i].key)) {
+        return i;
+      }
+    }
+    return -1; // cancelled before any step recorded (edge case)
+  })();
+
+  const showRefund = order.payment && order.paymentMethod !== "COD";
+
+  // All timeline rows: completed stages + Cancelled + optional Refund
+  const rows = [
+    ...CANCEL_STEPS.slice(0, lastActiveIndex + 1).map((s) => {
+      const entry = order.statusHistory?.find((h) => h.status === s.key);
+      return { type: "done", label: s.label, date: entry?.date };
+    }),
+    {
+      type: "cancelled",
+      label: "Cancelled",
+      date: order.cancelledAt,
+    },
+    ...(showRefund
+      ? [
+          {
+            type: isRefunded ? "refunded" : "pending-refund",
+            label: isRefunded ? "Refund processed" : "Refund processing",
+            date: isRefunded ? order.refundDate : null,
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <div className="pl-1">
+      {rows.map((row, i) => {
+        const isLast = i === rows.length - 1;
+        const isCancelledRow = row.type === "cancelled";
+        const isRefundedRow = row.type === "refunded";
+        const isPendingRefund = row.type === "pending-refund";
+
+        // Dot colour
+        const dotClass = isCancelledRow
+          ? "bg-red-500 border-red-500 text-white"
+          : isRefundedRow
+            ? "bg-green-600 border-green-600 text-white"
+            : isPendingRefund
+              ? "bg-white border-slate-300 text-slate-400"
+              : "bg-slate-900 border-slate-900 text-white"; // done
+
+        // Line colour below this row
+        const lineClass = isCancelledRow
+          ? "bg-slate-200"
+          : isRefundedRow || isPendingRefund
+            ? "bg-slate-200"
+            : "bg-slate-300";
+
+        return (
+          <div
+            key={i}
+            className={`relative flex gap-3 sm:gap-4 ${isLast ? "" : "pb-6"}`}
+          >
+            {/* Connector line */}
+            {!isLast && (
+              <div
+                className={`absolute left-[13px] sm:left-[15px] top-7 bottom-0 w-px ${lineClass}`}
+              />
+            )}
+
+            {/* Dot */}
+            <div
+              className={`relative z-10 flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center ${dotClass}`}
+            >
+              {isRefundedRow ? (
+                <Check className="w-3.5 h-3.5" strokeWidth={3} />
+              ) : isCancelledRow ? (
+                <span className="w-2 h-2 rounded-full bg-white opacity-80" />
+              ) : isPendingRefund ? (
+                <span className="w-2 h-2 rounded-full bg-slate-300" />
+              ) : (
+                <Check className="w-3.5 h-3.5" strokeWidth={3} />
+              )}
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <p
+                className={`text-sm font-semibold leading-tight ${
+                  isCancelledRow
+                    ? "text-red-600"
+                    : isRefundedRow
+                      ? "text-green-700"
+                      : isPendingRefund
+                        ? "text-slate-500"
+                        : "text-slate-900"
+                }`}
+              >
+                {row.label}
+              </p>
+              {row.date && (
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {fmtDate(row.date)}
+                </p>
+              )}
+              {isPendingRefund && (
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Pending review by admin
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -140,14 +281,14 @@ const OrderDetails = () => {
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="border-t border-gray-200 pt-8 sm:pt-14 px-4 sm:px-6 lg:px-0 pb-20 max-w-5xl mx-auto">
+      <div className="border-t border-gray-200 pt-8 sm:pt-14 px-4 sm:px-6 lg:px-0 pb-20 max-w-5xl mx-auto overflow-x-hidden">
         <div className="h-6 w-44 bg-gray-100 rounded mb-6 animate-pulse" />
-        <div className="grid lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 space-y-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-5 min-w-0">
             <div className="h-64 bg-gray-100 rounded-2xl animate-pulse" />
             <div className="h-48 bg-gray-100 rounded-2xl animate-pulse" />
           </div>
-          <div className="space-y-5">
+          <div className="space-y-5 min-w-0">
             <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />
             <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />
           </div>
@@ -158,7 +299,7 @@ const OrderDetails = () => {
 
   if (!order) {
     return (
-      <div className="border-t border-gray-200 pt-14 px-4 pb-20 max-w-5xl mx-auto text-center">
+      <div className="border-t border-gray-200 pt-14 px-4 pb-20 max-w-5xl mx-auto text-center overflow-x-hidden">
         <p className="text-sm text-gray-400">Order not found.</p>
         <button
           onClick={() => navigate("/orders")}
@@ -193,50 +334,55 @@ const OrderDetails = () => {
   };
 
   return (
-    <div className="border-t border-gray-200 pt-8 sm:pt-14 px-4 sm:px-6 lg:px-0 pb-28 lg:pb-16 max-w-5xl mx-auto">
-      {/* Header */}
+    // overflow-x-hidden on the root prevents any child from widening the page
+    <div className="border-t border-gray-200 pt-8 sm:pt-14 px-4 sm:px-6 lg:px-0 pb-28 lg:pb-16 max-w-5xl mx-auto overflow-x-hidden">
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3">
+        {/* Left: back button + title + order ID */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
             onClick={() => navigate("/orders")}
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
               Order Details
             </h1>
             <button
               onClick={copyOrderId}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 font-mono mt-0.5 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 font-mono mt-0.5 transition-colors w-full min-w-0"
             >
-              <span className="truncate max-w-[180px] sm:max-w-none">
-                ID: {order._id}
-              </span>
-              <Copy className="w-3.5 h-3.5" />
+              {/* truncate keeps the long hex ID inside its container */}
+              <span className="truncate">ID: {order._id}</span>
+              <Copy className="w-3.5 h-3.5 flex-shrink-0" />
             </button>
           </div>
         </div>
 
+        {/* Right: status badge — flex-shrink-0 stops it from being squeezed */}
         <span
-          className={`self-start sm:self-auto inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap ${getStatusStyle(order.status)}`}
+          className={`self-start sm:self-auto flex-shrink-0 inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap ${getStatusStyle(order.status)}`}
         >
           <span className="relative flex h-2 w-2 flex-shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-50"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-50" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
           </span>
           {order.status}
         </span>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        {/* ── Left column ───────────────────────────────────────────────── */}
-        <div className="lg:col-span-2 space-y-5">
+      {/* ── Grid ───────────────────────────────────────────────────────────── */}
+      {/* grid-cols-1 is explicit for mobile; lg bumps to 3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* ── Left column ─────────────────────────────────────────────────── */}
+        {/* min-w-0 prevents the column from overflowing grid bounds */}
+        <div className="lg:col-span-2 space-y-5 min-w-0 w-full">
           {/* Items card */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6">
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 min-w-0">
             <div className="flex items-center gap-2 mb-4">
-              <Package className="w-4 h-4" />
+              <Package className="w-4 h-4 flex-shrink-0" />
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 Items ({totalItems})
               </h2>
@@ -246,7 +392,7 @@ const OrderDetails = () => {
               {order.items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0"
+                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
                 >
                   <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
                     <img
@@ -255,11 +401,12 @@ const OrderDetails = () => {
                       alt={item.name}
                     />
                   </div>
+                  {/* min-w-0 ensures long names truncate instead of overflowing */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2 sm:truncate">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {item.name}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       <span className="text-xs px-2 py-0.5 border border-gray-200 bg-gray-50 text-gray-600 rounded-sm uppercase tracking-wider font-medium">
                         Size: {item.size}
                       </span>
@@ -278,7 +425,7 @@ const OrderDetails = () => {
           </div>
 
           {/* Tracking card */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6">
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 min-w-0">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 Tracking
@@ -286,7 +433,7 @@ const OrderDetails = () => {
               <button
                 onClick={() => fetchOrder(true)}
                 disabled={refreshing}
-                className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-50 transition-colors"
+                className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-50 transition-colors"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -296,67 +443,7 @@ const OrderDetails = () => {
             </div>
 
             {isCancelled ? (
-              <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-100 p-4">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-500">
-                  <X className="w-4 h-4" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-700">
-                    This order was cancelled
-                  </p>
-                  {order.cancelledAt && (
-                    <p className="text-xs text-red-500 mt-0.5">
-                      Cancelled on{" "}
-                      {new Date(order.cancelledAt).toLocaleString(undefined, {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  )}
-
-                  {/* Refund status — only shown for paid non-COD orders */}
-                  {order.payment && order.paymentMethod !== "COD" && (
-                    <div className="mt-3 pt-3 border-t border-red-100">
-                      {isRefunded ? (
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-                          <span className="inline-flex items-center gap-1.5 self-start whitespace-nowrap text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1">
-                            <CheckCircle2
-                              className="w-3 h-3 flex-shrink-0"
-                              strokeWidth={2.5}
-                            />
-                            Refund Processed
-                          </span>
-                          {order.refundDate && (
-                            <span className="text-xs text-red-400">
-                              on{" "}
-                              {new Date(order.refundDate).toLocaleString(
-                                undefined,
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-red-500">
-                          Refund status:{" "}
-                          <span className="font-medium">
-                            {order.refundStatus || "Pending review by admin"}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <CancelledTimeline order={order} isRefunded={isRefunded} />
             ) : (
               <OrderTrackingTimeline
                 order={order}
@@ -366,12 +453,12 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* ── Right column ──────────────────────────────────────────────── */}
-        <div className="space-y-5">
-          {/* Price summary */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6">
+        {/* ── Right column ────────────────────────────────────────────────── */}
+        <div className="space-y-5 min-w-0 w-full">
+          {/* Order summary */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <Receipt className="w-4 h-4" />
+              <Receipt className="w-4 h-4 flex-shrink-0" />
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 Order Summary
               </h2>
@@ -402,14 +489,15 @@ const OrderDetails = () => {
           </div>
 
           {/* Shipping address */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6">
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-4 h-4 flex-shrink-0" />
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 Shipping Address
               </h2>
             </div>
-            <div className="text-sm text-gray-600 leading-relaxed space-y-0.5">
+            {/* break-words prevents long address strings from overflowing */}
+            <div className="text-sm text-gray-600 leading-relaxed space-y-0.5 break-words">
               <p className="font-medium text-gray-900">
                 {a.firstName} {a.lastName}
               </p>
@@ -426,9 +514,9 @@ const OrderDetails = () => {
           </div>
 
           {/* Payment */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6">
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <CreditCard className="w-4 h-4" />
+              <CreditCard className="w-4 h-4 flex-shrink-0" />
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 Payment
               </h2>
@@ -456,7 +544,6 @@ const OrderDetails = () => {
                       : "Pending"}
                 </span>
               </div>
-              {/* Refund row — shown only when refunded */}
               {isRefunded && (
                 <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                   <span>Refund</span>
@@ -468,7 +555,7 @@ const OrderDetails = () => {
             </div>
           </div>
 
-          {/* Cancel button — desktop */}
+          {/* Cancel button — desktop only */}
           {canCancel && (
             <button
               onClick={() => setCancelOpen(true)}
@@ -480,7 +567,7 @@ const OrderDetails = () => {
         </div>
       </div>
 
-      {/* Sticky cancel bar — mobile */}
+      {/* ── Sticky cancel bar — mobile ──────────────────────────────────────── */}
       {canCancel && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white/95 backdrop-blur-sm px-4 py-3">
           <button
@@ -492,7 +579,7 @@ const OrderDetails = () => {
         </div>
       )}
 
-      {/* Cancel Confirmation Modal */}
+      {/* ── Cancel modal ───────────────────────────────────────────────────── */}
       {cancelOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
