@@ -3,6 +3,15 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "./Title";
 import ProductItem from "./ProductItem";
 
+const shuffleArray = (array) => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
 const RelatedProducts = ({ category, subCategory }) => {
   const { products } = useContext(ShopContext);
   const [related, setRelated] = useState([]);
@@ -11,10 +20,11 @@ const RelatedProducts = ({ category, subCategory }) => {
     if (products.length > 0) {
       const filteredProducts = products
         .filter((item) => item.category === category)
-        .filter((item) => item.subCategory === subCategory)
-        .slice(0, 5);
+        .filter((item) => item.subCategory === subCategory);
 
-      setRelated(filteredProducts);
+      const shuffled = shuffleArray(filteredProducts).slice(0, 5);
+
+      setRelated(shuffled);
     }
   }, [products, category, subCategory]);
 
