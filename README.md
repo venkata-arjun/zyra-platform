@@ -33,21 +33,21 @@ The platform handles everything from product discovery and cart management to pa
 ## 🔗 Quick Links
 
 <p align="center">
-  
+
 <a href="https://zyrafashion.vercel.app/">
-    <img src="https://img.shields.io/badge/🌐_Live_Demo-Visit_ZYRA-111827?style=for-the-badge" alt="Live Demo"/>
-  </a>
-  
+  <img src="https://img.shields.io/badge/Live-Demo-111827?style=flat-square&logo=vercel&logoColor=white"/>
+</a>
+
 <a href="https://admin-zyra.vercel.app/">
-  <img src="https://img.shields.io/badge/⚙️_Admin_Dashboard-2563EB?style=for-the-badge" alt="Admin Dashboard"/>
+  <img src="https://img.shields.io/badge/Admin-Dashboard-2563EB?style=flat-square&logo=vercel&logoColor=white"/>
 </a>
 
 <a href="https://zyra-backend-tan.vercel.app/">
-  <img src="https://img.shields.io/badge/🚀_Backend_API-059669?style=for-the-badge" alt="Backend API"/>
+  <img src="https://img.shields.io/badge/Backend-API-16A34A?style=flat-square&logo=node.js&logoColor=white"/>
 </a>
 
 <a href="https://github.com/venkata-arjun/zyra-platform">
-  <img src="https://img.shields.io/badge/📂_GitHub_Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository"/>
+  <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github&logoColor=white"/>
 </a>
 
 </p>
