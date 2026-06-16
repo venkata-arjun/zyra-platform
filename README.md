@@ -56,9 +56,9 @@ The platform covers the entire e-commerce lifecycle — from product discovery a
 
 | Service | URL |
 |---|---|
-| Customer Store | https://zyrafashion.vercel.app/ |
-| Admin Dashboard | https://admin-zyra.vercel.app/ |
-| Backend API | https://zyra-server.vercel.app/ |
+| Customer Store | https://zyrafashion.vercel.app |
+| Admin Dashboard | https://admin-zyra.vercel.app |
+| Backend API | https://zyra-server.vercel.app |
 | GitHub | https://github.com/venkata-arjun/zyra-platform |
 
 ---
@@ -333,9 +333,9 @@ git push origin feature/your-feature-name
 |---|---|
 | GitHub | https://github.com/venkata-arjun |
 | Repository | https://github.com/venkata-arjun/zyra-platform |
-| Live Store | https://zyrafashion.vercel.app/ |
-| Admin Panel | https://admin-zyra.vercel.app/ |
-| Backend API | https://zyra-server.vercel.app/ |
+| Live Store | https://zyrafashion.vercel.app |
+| Admin Panel | https://admin-zyra.vercel.app |
+| Backend API | https://zyra-server.vercel.app |
 
 ---
 
