@@ -133,7 +133,7 @@ MongoDB  Cloudinary  Payment Gateway
 
 <p align="center">
   <img
-    src=".frontend/src/assets/order-tracking.png"
+    src="frontend/src/assets/order-tracking.png"
     alt="Order Tracking Pipeline"
     width="50%"
   />
