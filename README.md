@@ -1,56 +1,65 @@
-# ZYRA — Full Stack Fashion Commerce Platform
+# ZYRA — Fashion Commerce Platform
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-Runtime-339933?style=flat-square&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-Backend-000000?style=flat-square&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Stripe-Payment-635BFF?style=flat-square&logo=stripe&logoColor=white" />
-  <img src="https://img.shields.io/badge/Razorpay-Payment-02042B?style=flat-square&logo=razorpay&logoColor=white" />
-  <img src="https://img.shields.io/badge/Deployed-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" />
+  <img src="https://img.shields.io/badge/Stripe-635BFF?style=flat-square&logo=stripe&logoColor=white" />
+  <img src="https://img.shields.io/badge/Razorpay-02042B?style=flat-square&logo=razorpay&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
 </p>
 
 <p align="center">
-  A production-ready MERN stack e-commerce platform with secure authentication, multi-gateway payments, real-time order tracking, and a dedicated admin dashboard.
+  A production-ready full stack fashion e-commerce platform built with the MERN stack.<br/>
+  Secure authentication, multi-gateway payments, real-time order tracking, and a dedicated admin dashboard.
 </p>
 
 <p align="center">
-  <a href="https://zyrafashion.vercel.app/">
-    <img src="https://img.shields.io/badge/🌐_Live_Demo-Visit_ZYRA-111827?style=for-the-badge" alt="Live Demo"/>
-  </a>
+  <a href="https://zyrafashion.vercel.app/"><img src="https://img.shields.io/badge/Customer Store-111827?style=flat-square&logo=vercel&logoColor=white" /></a>
+  &nbsp;
+  <a href="https://admin-zyra.vercel.app/"><img src="https://img.shields.io/badge/Admin Dashboard-2563EB?style=flat-square&logo=vercel&logoColor=white" /></a>
+  &nbsp;
+  <a href="https://zyra-server.vercel.app/"><img src="https://img.shields.io/badge/Backend API-16A34A?style=flat-square&logo=node.js&logoColor=white" /></a>
+  &nbsp;
+  <a href="https://github.com/venkata-arjun/zyra-platform"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" /></a>
 </p>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Live Links](#live-links)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Order Tracking](#order-tracking)
+- [Folder Structure](#folder-structure)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Application Flow](#application-flow)
+- [Contributing](#contributing)
+- [Developer](#developer)
 
 ---
 
 ## Overview
 
-ZYRA is a complete fashion e-commerce solution built on the MERN stack. It delivers a polished shopping experience on the customer side while giving administrators full control over products and orders through a dedicated panel.
+ZYRA is a complete fashion e-commerce solution built on the MERN stack. It provides a seamless shopping experience for customers and full operational control for administrators through a separate admin panel.
 
-The platform handles everything from product discovery and cart management to payment processing, order fulfillment, and delivery verification — all in a responsive, performant interface.
+The platform covers the entire e-commerce lifecycle — from product discovery and cart management to payment processing, order fulfillment, and verified delivery — across a fully responsive interface.
 
 ---
 
-## 🔗 Quick Links
+## Live Links
 
-<p align="center">
-
-<a href="https://zyrafashion.vercel.app/">
-  <img src="https://img.shields.io/badge/Live-Demo-111827?style=flat-square&logo=vercel&logoColor=white"/>
-</a>
-
-<a href="https://admin-zyra.vercel.app/">
-  <img src="https://img.shields.io/badge/Admin-Dashboard-2563EB?style=flat-square&logo=vercel&logoColor=white"/>
-</a>
-
-<a href="https://zyra-backend-tan.vercel.app/">
-  <img src="https://img.shields.io/badge/Backend-API-16A34A?style=flat-square&logo=node.js&logoColor=white"/>
-</a>
-
-<a href="https://github.com/venkata-arjun/zyra-platform">
-  <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github&logoColor=white"/>
-</a>
-
-</p>
+| Service | URL |
+|---|---|
+| Customer Store | https://zyrafashion.vercel.app/ |
+| Admin Dashboard | https://admin-zyra.vercel.app/ |
+| Backend API | https://zyra-server.vercel.app/ |
+| GitHub | https://github.com/venkata-arjun/zyra-platform |
 
 ---
 
@@ -60,88 +69,101 @@ The platform handles everything from product discovery and cart management to pa
 
 - Responsive landing page with latest collections and best sellers
 - Product search with category and sub-category filters
-- Detailed product pages with related product suggestions
+- Product detail pages with related product suggestions
 - Shopping cart with quantity management
-- Checkout with multiple payment methods
+- Secure checkout with multiple payment options
 - Order history with real-time status tracking
-- Delivery verification code system
+- Delivery verification code on each order
 - Profile management and password update
 
 ### Admin
 
-- Product management — add, edit, delete, and list products
-- Multi-image upload via Cloudinary
-- Order management with search and filter
-- View full customer and shipping details
-- Update order status through the delivery pipeline
+- Add, edit, delete, and list products
+- Multi-image upload per product via Cloudinary
+- Order management with search and status filters
+- View full customer details and shipping addresses
+- Update order status at every stage of the delivery pipeline
 
 ### Payments
 
-Stripe, Razorpay, and Cash on Delivery (COD) are all supported at checkout.
+Three payment methods supported at checkout — Stripe, Razorpay, and Cash on Delivery (COD).
 
 ---
 
 ## Tech Stack
 
-### Frontend
+**Frontend**
 
-- React 19, Vite
-- Tailwind CSS
-- React Router DOM
-- Axios
-- React Hot Toast
-- Lucide React
+| Tool | Purpose |
+|---|---|
+| React 19 + Vite | UI framework and build tool |
+| Tailwind CSS | Utility-first styling |
+| React Router DOM | Client-side routing |
+| Axios | HTTP requests |
+| React Hot Toast | Notifications |
+| Lucide React | Icon library |
 
-### Backend
+**Backend**
 
-- Node.js, Express.js
-- MongoDB, Mongoose
-- JWT Authentication
-- Multer, Cloudinary
+| Tool | Purpose |
+|---|---|
+| Node.js + Express.js | Server and REST API |
+| MongoDB + Mongoose | Database and ODM |
+| JWT | Authentication |
+| Multer + Cloudinary | File upload and image storage |
 
-### Payments
+**Payments**
 
-- Stripe
-- Razorpay
+| Gateway | Type |
+|---|---|
+| Stripe | Card payments |
+| Razorpay | UPI, cards, netbanking |
+| Cash on Delivery | Offline payment |
 
-### Deployment
+**Deployment**
 
-- Vercel (frontend, admin, backend)
-- MongoDB Atlas
-- Cloudinary
+| Service | Usage |
+|---|---|
+| Vercel | Frontend, Admin, Backend |
+| MongoDB Atlas | Cloud database |
+| Cloudinary | Image CDN |
 
 ---
 
 ## Architecture
 
 ```
-React Frontend (Customer + Admin)
-            |
-        Axios REST API
-            |
-   Express + Node.js Server
-            |
-   ┌────────┼────────────┐
-   |        |            |
-MongoDB  Cloudinary  Payment Gateway
-                    (Stripe / Razorpay)
+┌──────────────────────────────────┐
+│   React Frontend  (Customer)     │
+│   React Frontend  (Admin)        │
+└─────────────────┬────────────────┘
+                  │  Axios  REST API
+┌─────────────────▼────────────────┐
+│   Express + Node.js  Server      │
+└──────┬──────────────────┬────────┘
+       │                  │
+  ┌────▼──────┐   ┌───────▼──────────────┐
+  │  MongoDB  │   │  Cloudinary           │
+  │  Atlas    │   │  (Image Storage)      │
+  └───────────┘   └──────────────────────┘
+       │
+┌──────▼─────────────────────┐
+│  Payment Gateways           │
+│  Stripe / Razorpay / COD   │
+└────────────────────────────┘
 ```
 
 ---
 
-## Order Tracking Pipeline
+## Order Tracking
 
-<p align="center">
-  <img
-    src="frontend/src/assets/order-tracking.png"
-    alt="Order Tracking Pipeline"
-    width="50%"
-  />
-  <br>
-  <sub><b>Real-time order lifecycle from placement to successful delivery.</b></sub>
-</p>
+Every order moves through the following stages in real time:
 
-Each stage includes live status updates, payment status, delivery verification code, shipping address, and a full order summary.
+```
+Order Placed  →  Packed  →  Shipped  →  Out for Delivery  →  Delivered
+```
+
+Each stage displays live status, payment status, a delivery verification code, the shipping address, and a full order summary.
 
 ---
 
@@ -149,6 +171,7 @@ Each stage includes live status updates, payment status, delivery verification c
 
 ```
 zyra-platform/
+│
 ├── frontend/
 │   └── src/
 │       ├── assets/
@@ -158,6 +181,7 @@ zyra-platform/
 │       ├── pages/
 │       ├── utils/
 │       └── App.jsx
+│
 ├── backend/
 │   ├── config/
 │   ├── controllers/
@@ -165,11 +189,13 @@ zyra-platform/
 │   ├── models/
 │   ├── routes/
 │   └── server.js
+│
 ├── admin/
 │   └── src/
 │       ├── components/
 │       ├── pages/
 │       └── App.jsx
+│
 └── README.md
 ```
 
@@ -177,14 +203,14 @@ zyra-platform/
 
 ## Installation
 
-### Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/venkata-arjun/zyra-platform.git
 cd zyra-platform
 ```
 
-### Frontend
+### 2. Frontend
 
 ```bash
 cd frontend
@@ -192,93 +218,81 @@ npm install
 npm run dev
 ```
 
-### Backend
+### 3. Backend
 
 ```bash
-cd backend
+cd ../backend
 npm install
 npm run dev
 ```
 
-### Admin
+### 4. Admin Panel
 
 ```bash
-cd admin
+cd ../admin
 npm install
 npm run dev
 ```
+
+The frontend and admin panels each run on their own Vite dev server. The backend runs as a separate Node process. Make sure all environment variables are configured before starting.
 
 ---
 
 ## Environment Variables
 
-### Frontend — `.env`
+### Frontend — `frontend/.env`
 
 ```env
-VITE_BACKEND_URL=
-VITE_RAZORPAY_KEY_ID=
+VITE_BACKEND_URL=your_backend_url
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
 ```
 
-### Backend — `.env`
+### Backend — `backend/.env`
 
 ```env
-MONGODB_URI=
+MONGODB_URI=your_mongodb_connection_string
 
-JWT_SECRET=
+JWT_SECRET=your_jwt_secret
 
-CLOUDINARY_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_SECRET=
+CLOUDINARY_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_SECRET=your_cloudinary_api_secret
 
-STRIPE_SECRET_KEY=
+STRIPE_SECRET_KEY=your_stripe_secret_key
 
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
+ADMIN_EMAIL=your_admin_email
+ADMIN_PASSWORD=your_admin_password
 ```
 
 ---
 
 ## Application Flow
 
-```
-Home  →  Collections  →  Product Details  →  Cart  →  Checkout  →  Payment  →  Order Confirmation  →  Tracking  →  Delivery
-```
-
-### Admin Flow
+**Customer journey**
 
 ```
-Login  →  Dashboard  →  Products (Add / Edit / Delete)  →  Orders  →  Update Status  →  Customer Delivery
+Home  →  Collections  →  Product Details  →  Add to Cart  →  Checkout  →  Payment  →  Order Confirmation  →  Order Tracking  →  Delivery
 ```
 
----
+**Admin journey**
 
-## Core Functionalities
-
-- JWT-based authentication
-- MongoDB data persistence
-- Full product CRUD with image upload
-- Shopping cart and checkout flow
-- Stripe and Razorpay payment integration
-- Cash on delivery support
-- Order placement and real-time tracking
-- Delivery verification code
-- Profile and password management
-- Admin product and order management
+```
+Login  →  Dashboard  →  Manage Products (Add / Edit / Delete)  →  Manage Orders  →  Update Order Status  →  Delivery Confirmed
+```
 
 ---
 
 ## Planned Improvements
 
-- Wishlist functionality
+- Wishlist and saved items
 - Product reviews and ratings
 - Coupon and discount system
-- Email notifications
-- Inventory analytics and sales dashboard
-- Admin charts
-- AI product recommendations
+- Email notifications for orders
+- Sales analytics dashboard with charts
+- AI-powered product recommendations
 - Dark mode
 - Progressive Web App (PWA) support
 
@@ -286,7 +300,7 @@ Login  →  Dashboard  →  Products (Add / Edit / Delete)  →  Orders  →  Up
 
 ## Contributing
 
-Contributions are welcome.
+Contributions are welcome. Please follow the steps below.
 
 1. Fork the repository
 2. Create a feature branch
@@ -298,28 +312,31 @@ git checkout -b feature/your-feature-name
 3. Commit your changes
 
 ```bash
-git commit -m "Add your feature description"
+git commit -m "Add: brief description of the change"
 ```
 
-4. Push the branch
+4. Push your branch
 
 ```bash
 git push origin feature/your-feature-name
 ```
 
-5. Open a Pull Request
+5. Open a Pull Request on GitHub with a clear description of what was changed and why.
 
 ---
 
-<p align="center"> <b>Rankela Venkata Arjun</b> &nbsp;|&nbsp; Full Stack MERN Developer </p>
+## Developer
 
-<p align="center">
-<img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white">
-<img src="https://img.shields.io/badge/Project-ZYRA-0F172A?style=flat-square">
-<img src="https://img.shields.io/badge/Live-Demo-111827?style=flat-square&logo=vercel&logoColor=white">
-<img src="https://img.shields.io/badge/Admin-Dashboard-2563EB?style=flat-square&logo=vercel&logoColor=white">
-<img src="https://img.shields.io/badge/Backend-API-16A34A?style=flat-square&logo=node.js&logoColor=white">
-</p>
+**Rankela Venkata Arjun** — Full Stack MERN Developer
 
+| | |
+|---|---|
+| GitHub | https://github.com/venkata-arjun |
+| Repository | https://github.com/venkata-arjun/zyra-platform |
+| Live Store | https://zyrafashion.vercel.app/ |
+| Admin Panel | https://admin-zyra.vercel.app/ |
+| Backend API | https://zyra-server.vercel.app/ |
 
-<p align="center">Built with the MERN Stack and deployed on Vercel.</p>
+---
+
+<p align="center">Built with the MERN Stack — React, Express, MongoDB, Node.js — and deployed on Vercel.</p>
